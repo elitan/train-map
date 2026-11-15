@@ -5,7 +5,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { LocalProjection, toXY } from './geo';
 import { bridgeGeometry, isBridge, isTunnel, makeDeckAt } from './bridges';
 import { Railway, type RailWay, type Train } from './rail';
-import { fetchElevation, fetchImagery, fetchRailways, geocode } from './data';
+import { fetchElevation, fetchImagery, fetchRailways, geocode, type RailWayData } from './data';
 import './style.css';
 
 const R = 2000;          // half-size of the map, meters
@@ -111,18 +111,20 @@ async function load(query: string) {
   following = null;
   setStatus(`Finding ${query}…`);
   try {
-    const place = await geocode(query);
+    // the default place ships with the site (scripts/snapshot.ts), so the first view never waits on Overpass
+    const saved = await loadSnapshot(query);
+    const place = saved ?? await geocode(query);
     if (id !== loadId) return;
     placeEl.textContent = place.name;
     input.value = query;
     history.replaceState(null, '', '?q=' + encodeURIComponent(query));
 
     const P = new LocalProjection(place.lat, place.lon);
-    setStatus('Loading terrain, aerial photos and railways…');
+    setStatus(saved ? 'Loading terrain and aerial photos…' : 'Loading terrain, aerial photos and railways… (the railway servers can take a while)');
     const [elev, img, rails] = await Promise.all([
       fetchElevation(P.bbox(R + MARGIN + 200)),
       fetchImagery(P.bbox(R)).catch(e => { console.warn('imagery', e); return null; }),
-      fetchRailways(P.bbox(R + MARGIN)),
+      saved ? saved.rails : fetchRailways(P.bbox(R + MARGIN)),
     ]);
     if (id !== loadId) return;
 
@@ -170,6 +172,15 @@ async function load(query: string) {
   } catch (e) {
     if (id === loadId) setStatus((e as Error).message);
   }
+}
+
+type Snapshot = { query: string; lat: number; lon: number; name: string; rails: RailWayData[] };
+async function loadSnapshot(query: string): Promise<Snapshot | null> {
+  try {
+    const r = await fetch('./default.json');
+    const s = r.ok ? await r.json() as Snapshot : null;
+    return s && s.query.toLowerCase() === query.trim().toLowerCase() ? s : null;
+  } catch { return null; }
 }
 
 function setStatus(s: string) { statusEl.textContent = s; statusEl.hidden = !s; }

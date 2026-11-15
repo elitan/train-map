@@ -25,7 +25,7 @@ Everything is fetched straight from the browser; there is no server.
 | What | Source |
 |---|---|
 | Place search | [Nominatim](https://nominatim.openstreetmap.org) (OpenStreetMap) |
-| Railway lines | [Overpass API](https://overpass-api.de) (OpenStreetMap), several mirrors raced |
+| Railway lines | [Overpass API](https://overpass-api.de) (OpenStreetMap), several mirrors raced. The default place is saved in `public/default.json` (`bun scripts/snapshot.ts "Lund, Sweden"`) so the first view loads at once. |
 | Elevation | [Terrarium tiles](https://registry.opendata.aws/terrain-tiles/) (AWS Open Data, Mapzen) |
 | Aerial photos | Esri World Imagery |
 

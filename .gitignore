@@ -1,4 +1,8 @@
-node_modules
-dist
+/target
+/web/node_modules
+/web/dist
+.env
+/.dev
+/web/tsconfig.tsbuildinfo
+/.vite
 .DS_Store
-*.tsbuildinfo

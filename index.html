@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Train Map</title>
+  <meta name="description" content="Trains running on real railway lines, on a 3D map built from open data." />
+</head>
+<body>
+  <div id="view"></div>
+  <header class="panel top">
+    <form id="search"><input id="q" placeholder="Search a place…" autocomplete="off" /></form>
+    <div id="place" class="muted"></div>
+  </header>
+  <aside class="panel side">
+    <h2>On the map</h2>
+    <div id="trains"></div>
+    <p class="hint">Click a train to ride along. Drag to orbit, scroll to zoom.</p>
+  </aside>
+  <div id="speed" class="panel pill" hidden></div>
+  <div id="status" class="panel pill"></div>
+  <footer class="credits">Railways © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · Imagery © Esri, Maxar, Earthstar Geographics · Elevation: Mapzen Terrarium (AWS Open Data)</footer>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

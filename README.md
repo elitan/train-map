@@ -45,7 +45,7 @@ rules for coding agents.
 Set `REQUEST_TIMEOUT_SECS=90`, since a first visit to a place can take longer than the default
 30 s. Migrations run on start.
 
-It runs on [frost](https://frost.j4labs.se) as the `train-map` service.
+It runs on frost: https://train-map-train-map.apps.j4labs.se (project and service `train-map`, volume `train-map-data` at `/data`; every push to `main` deploys).
 
 ## Data
 

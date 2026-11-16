@@ -25,16 +25,23 @@ COPY crates crates
 COPY server server
 COPY .sqlx .sqlx
 COPY --from=web /src/web/dist web/dist
-RUN cargo build --release -p server && strip target/release/app
+# Downloaded crates and compiled dependencies are kept between builds on the same Docker host
+# (BuildKit cache mounts, with ids of their own so other apps on the host don't share them),
+# so a deploy only recompiles what changed. The binary is copied out of the cached target dir.
+RUN --mount=type=cache,id=train-map-cargo-registry,target=/usr/local/cargo/registry,sharing=locked \
+    --mount=type=cache,id=train-map-cargo-git,target=/usr/local/cargo/git,sharing=locked \
+    --mount=type=cache,id=train-map-target,target=/src/target,sharing=locked \
+    cargo build --release -p server && strip target/release/app && cp target/release/app /app
 # An empty /data owned by the runtime user, so it works without a volume too.
 RUN mkdir -p /data
 
 # --- runtime ----------------------------------------------------------------
 # Distroless: no shell, no package manager, runs as non-root (uid 65532).
 FROM gcr.io/distroless/cc-debian12:nonroot
-COPY --from=build /src/target/release/app /app
+COPY --from=build /app /app
 COPY --from=build --chown=65532:65532 /data /data
-ENV PORT=3000 LOG_FORMAT=json DATABASE_URL=sqlite:/data/app.db
+# A first visit to a place waits on OpenStreetMap's Overpass, which can take over 30 s.
+ENV PORT=3000 LOG_FORMAT=json DATABASE_URL=sqlite:/data/app.db REQUEST_TIMEOUT_SECS=90
 VOLUME /data
 EXPOSE 3000
 ENTRYPOINT ["/app"]

@@ -4,16 +4,9 @@ on: [push, pull_request]
 jobs:
   ci:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_PASSWORD: postgres
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     env:
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/app_ci
+      # A file, created by the first step (`just ci` migrates it).
+      DATABASE_URL: sqlite:data/ci.db
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -28,3 +21,12 @@ jobs:
       # Migrates a fresh database, then verifies every generated file is up to
       # date and runs format, lint, tests and the frontend build.
       - run: just ci
+      # Browser smoke tests: the real binary (frontend embedded) in headless Chromium.
+      - run: cd web && bunx playwright install --with-deps chromium
+      - run: just e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: web/test-results/
+          if-no-files-found: ignore

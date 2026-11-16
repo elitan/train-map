@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO osm_cache (key, data) VALUES ($1, $2)\n         ON CONFLICT (key) DO UPDATE SET data = excluded.data,\n           fetched_at = strftime('%Y-%m-%dT%H:%M:%f+00:00')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "8da39349aafb7f2d5c54731d72b0f1917ec10ca875668c1498736e39c1daefd3"
+}

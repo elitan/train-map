@@ -1,19 +1,18 @@
 use std::time::Duration;
 
-use sqlx::PgPool;
+use sqlx::SqlitePool;
 
 /// Shared application state, available to every procedure (`ctx.state`) and
 /// job handler. Keep it cheap to clone.
 #[derive(Clone)]
 pub struct AppState {
-    pub db: PgPool,
+    pub db: SqlitePool,
     /// HTTP client for OpenStreetMap services (connection pooling, rustls).
     pub http: reqwest::Client,
 }
 
 impl AppState {
-    pub fn new(db: PgPool) -> Self {
-        // reqwest uses the same `ring` crypto as the database driver
+    pub fn new(db: SqlitePool) -> Self {
         let _ = rustls::crypto::ring::default_provider().install_default();
         let http = reqwest::Client::builder()
             // OSM's usage policies ask for an identifying User-Agent

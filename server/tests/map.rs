@@ -3,24 +3,20 @@
 
 use std::time::Duration;
 
-use northstack::testing::Client;
+use northstack::testing::{Client, TestDb};
 use server::features::map::types::*;
 use server::{AppState, MIGRATOR};
-use sqlx::PgPool;
 
-async fn setup(pool: &PgPool) -> Client {
-    northstack::migrate(pool, &MIGRATOR).await.unwrap();
-    let router = server::build().router(
-        AppState::new(pool.clone()),
-        pool.clone(),
-        Duration::from_secs(30),
-    );
-    Client::new(router)
+async fn setup() -> (TestDb, Client) {
+    let db = northstack::testing::db(&MIGRATOR).await;
+    let router =
+        server::build().router(AppState::new(db.pool()), db.pool(), Duration::from_secs(30));
+    (db, Client::new(router))
 }
 
-#[sqlx::test(migrations = false)]
-async fn place_from_coordinates(pool: PgPool) {
-    let client = setup(&pool).await;
+#[tokio::test]
+async fn place_from_coordinates() {
+    let (_db, client) = setup().await;
     let p: Place = client
         .call(
             "map.place",
@@ -33,9 +29,9 @@ async fn place_from_coordinates(pool: PgPool) {
     assert_eq!((p.lat, p.lon), (55.7058, 13.187));
 }
 
-#[sqlx::test(migrations = false)]
-async fn railways_refuses_bad_areas(pool: PgPool) {
-    let client = setup(&pool).await;
+#[tokio::test]
+async fn railways_refuses_bad_areas() {
+    let (_db, client) = setup().await;
     let too_big = RailwaysInput {
         s: 55.0,
         w: 13.0,

@@ -7,12 +7,12 @@ railway lines from OpenStreetMap are laid on top as ballast, sleepers and rails 
 embankments and cross bridges. Passenger and freight trains roll in from the edge of the map and
 pass through. Click a train, or pick it from the list, to ride along.
 
-Built on [northstack](https://github.com/elitan/northstack) (Rust + Postgres + React in one binary).
+Built on [northstack](https://github.com/elitan/northstack) (Rust + SQLite + React in one binary).
 The rail and train code comes from [Hometown](https://github.com/elitan/hometown).
 
 ## Run it
 
-You need Rust, Bun, `just` and Docker (or your own Postgres).
+You need Rust, Bun and `just`.
 
 ```bash
 just dev
@@ -23,7 +23,7 @@ Then open http://localhost:5190. `?q=Göteborg` (or any place, or `lat, lon`) st
 ## How it works
 
 The server looks up the place (Nominatim) and its railway lines (Overpass, several mirrors raced),
-and keeps every answer in Postgres (`osm_cache`). The first visit to a place waits on
+and keeps every answer in its SQLite database (`osm_cache`). The first visit to a place waits on
 OpenStreetMap, often 10–30 s; after that it loads at once. The browser loads elevation (Terrarium)
 and aerial photo (Esri) tiles itself and builds the scene with three.js.
 
@@ -40,9 +40,12 @@ rules for coding agents.
 
 ## Running in production
 
-`docker build -t train-map .` gives one small image; it needs `DATABASE_URL` (Postgres) and
-should get `REQUEST_TIMEOUT_SECS=90`, since a first visit to a place can take longer than the
-default 30 s. Migrations run on start.
+`docker build -t train-map .` gives one small image. The database is one SQLite file,
+`/data/app.db`: mount a persistent volume at `/data` (local disk, not a network file system).
+Set `REQUEST_TIMEOUT_SECS=90`, since a first visit to a place can take longer than the default
+30 s. Migrations run on start.
+
+It runs on [frost](https://frost.j4labs.se) as the `train-map` service.
 
 ## Data
 
